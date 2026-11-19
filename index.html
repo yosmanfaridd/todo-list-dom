@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f1ec" />
+    <meta name="description" content="Organiza tus tareas pendientes y fechas importantes." />
     <title>Lista de tareas</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -13,8 +15,8 @@
           <p class="eyebrow">Mi agenda</p>
           <h1>Mis tareas</h1>
         </div>
-        <button class="theme-button" id="theme-button" type="button" aria-label="Cambiar tema">
-          <span aria-hidden="true">☾</span>
+        <button class="theme-button" id="theme-button" type="button" aria-label="Cambiar a tema oscuro" title="Cambiar tema">
+          <span aria-hidden="true" id="theme-icon">☾</span>
         </button>
       </header>
 
@@ -25,11 +27,12 @@
           type="text"
           placeholder="¿Qué necesitas hacer?"
           autocomplete="off"
+          maxlength="100"
           required
         />
 
         <label class="sr-only" for="date-picker">Fecha</label>
-        <input id="date-picker" type="date" />
+        <input id="date-picker" type="date" aria-label="Fecha de la tarea" />
 
         <button class="add-button" type="submit">
           <span aria-hidden="true">＋</span>

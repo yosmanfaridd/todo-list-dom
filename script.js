@@ -5,47 +5,98 @@ const todoList = document.getElementById('todo-list');
 const taskCount = document.getElementById('task-count');
 const emptyState = document.getElementById('empty-state');
 const themeButton = document.getElementById('theme-button');
+const themeIcon = document.getElementById('theme-icon');
+const themeMeta = document.querySelector('meta[name="theme-color"]');
 
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let todos = loadTodos();
+
+function loadTodos() {
+  try {
+    const storedTodos = JSON.parse(localStorage.getItem('todos'));
+    if (!Array.isArray(storedTodos)) return [];
+
+    return storedTodos.filter((todo) =>
+      todo &&
+      typeof todo.id === 'string' &&
+      typeof todo.title === 'string'
+    );
+  } catch {
+    return [];
+  }
+}
 
 function saveTodos() {
-  localStorage.setItem('todos', JSON.stringify(todos));
+  try {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  } catch {
+    taskCount.textContent = 'No se pudo guardar la lista';
+  }
 }
 
 function formatDate(dateString) {
   if (!dateString) return 'Sin fecha';
 
   const date = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return 'Sin fecha';
+
   return new Intl.DateTimeFormat('es', {
     day: 'numeric',
     month: 'short',
   }).format(date);
 }
 
+function createTaskElement(todo) {
+  const item = document.createElement('article');
+  item.className = `task-item${todo.completed ? ' completed' : ''}`;
+  item.dataset.id = todo.id;
+
+  const checkButton = document.createElement('button');
+  checkButton.className = 'check-button';
+  checkButton.type = 'button';
+  checkButton.setAttribute(
+    'aria-label',
+    todo.completed ? 'Marcar como pendiente' : 'Marcar como completada'
+  );
+  checkButton.setAttribute('aria-pressed', String(Boolean(todo.completed)));
+  checkButton.textContent = todo.completed ? '✓' : '';
+
+  const content = document.createElement('div');
+  content.className = 'task-content';
+
+  const title = document.createElement('span');
+  title.className = 'task-title';
+  title.textContent = todo.title;
+
+  const date = document.createElement('span');
+  date.className = 'task-date';
+  date.textContent = formatDate(todo.dueDate);
+
+  content.append(title, date);
+
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const editButton = document.createElement('button');
+  editButton.className = 'icon-button edit';
+  editButton.type = 'button';
+  editButton.setAttribute('aria-label', `Editar ${todo.title}`);
+  editButton.textContent = '✎';
+
+  const deleteButton = document.createElement('button');
+  deleteButton.className = 'icon-button delete';
+  deleteButton.type = 'button';
+  deleteButton.setAttribute('aria-label', `Eliminar ${todo.title}`);
+  deleteButton.textContent = '×';
+
+  actions.append(editButton, deleteButton);
+  item.append(checkButton, content, actions);
+  return item;
+}
+
 function render() {
-  todoList.innerHTML = '';
-
+  todoList.replaceChildren();
   todos.forEach((todo) => {
-    const item = document.createElement('article');
-    item.className = `task-item${todo.completed ? ' completed' : ''}`;
-    item.dataset.id = todo.id;
-
-    item.innerHTML = `
-      <button class="check-button" type="button" aria-label="${todo.completed ? 'Marcar como pendiente' : 'Marcar como completada'}">
-        ${todo.completed ? '✓' : ''}
-      </button>
-      <div class="task-content">
-        <span class="task-title"></span>
-        <span class="task-date">${formatDate(todo.dueDate)}</span>
-      </div>
-      <div class="task-actions">
-        <button class="icon-button edit" type="button" aria-label="Editar tarea">✎</button>
-        <button class="icon-button delete" type="button" aria-label="Eliminar tarea">×</button>
-      </div>
-    `;
-
-    item.querySelector('.task-title').textContent = todo.title;
-    todoList.appendChild(item);
+    todoList.appendChild(createTaskElement(todo));
   });
 
   const pendingCount = todos.filter((todo) => !todo.completed).length;
@@ -60,7 +111,9 @@ form.addEventListener('submit', (event) => {
   if (!title) return;
 
   todos.push({
-    id: crypto.randomUUID(),
+    id: typeof globalThis.crypto?.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     title,
     dueDate: dateInput.value,
     completed: false,
@@ -91,6 +144,7 @@ todoList.addEventListener('click', (event) => {
     const editInput = document.createElement('input');
     editInput.className = 'edit-input';
     editInput.value = todo.title;
+    editInput.maxLength = 100;
     editInput.setAttribute('aria-label', 'Editar nombre de la tarea');
     titleElement.replaceWith(editInput);
     editInput.focus();
@@ -105,10 +159,23 @@ todoList.addEventListener('click', (event) => {
       render();
     };
 
-    editInput.addEventListener('blur', finishEditing);
+    let editingFinished = false;
+    const finishOnce = () => {
+      if (editingFinished) return;
+      editingFinished = true;
+      finishEditing();
+    };
+
+    editInput.addEventListener('blur', finishOnce);
     editInput.addEventListener('keydown', (keyboardEvent) => {
-      if (keyboardEvent.key === 'Enter') editInput.blur();
-      if (keyboardEvent.key === 'Escape') render();
+      if (keyboardEvent.key === 'Enter') {
+        keyboardEvent.preventDefault();
+        finishOnce();
+      }
+      if (keyboardEvent.key === 'Escape') {
+        editingFinished = true;
+        render();
+      }
     });
     return;
   }
@@ -117,16 +184,29 @@ todoList.addEventListener('click', (event) => {
   render();
 });
 
+function setTheme(isDark) {
+  document.body.classList.toggle('dark', isDark);
+  themeIcon.textContent = isDark ? '☀' : '☾';
+  themeButton.setAttribute(
+    'aria-label',
+    isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
+  );
+  themeMeta.setAttribute('content', isDark ? '#17181d' : '#f3f1ec');
+}
+
 themeButton.addEventListener('click', () => {
-  document.body.classList.toggle('dark');
-  const isDark = document.body.classList.contains('dark');
-  themeButton.innerHTML = `<span aria-hidden="true">${isDark ? '☀' : '☾'}</span>`;
+  const isDark = !document.body.classList.contains('dark');
+  setTheme(isDark);
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
 });
 
-if (localStorage.getItem('theme') === 'dark') {
-  document.body.classList.add('dark');
-  themeButton.innerHTML = '<span aria-hidden="true">☀</span>';
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+let storedTheme = null;
+try {
+  storedTheme = localStorage.getItem('theme');
+} catch {
+  storedTheme = null;
 }
+setTheme(storedTheme ? storedTheme === 'dark' : prefersDark.matches);
 
 render();
