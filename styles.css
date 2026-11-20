@@ -1,13 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --background: #f3f1ec;
+  --background: #f4f2ec;
   --surface: #ffffff;
-  --text: #1f2430;
-  --muted: #7a808a;
-  --line: #e6e4df;
-  --accent: #5c62c9;
-  --accent-soft: #eeeefe;
-  --danger: #cc5b67;
-  --shadow: 0 20px 60px rgba(48, 45, 38, 0.1);
+  --text: #181c26;
+  --muted: #6c7280;
+  --line: #e4e1da;
+  --accent: #46e546;
+  --accent-soft: #eef2ff;
+  --danger: #dc2626;
+  --shadow: 0 20px 60px rgba(24, 28, 38, 0.08);
 }
 
 * {
@@ -20,21 +22,23 @@ body {
   display: grid;
   place-items: center;
   padding: 32px 16px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 15% 15%, rgba(92, 98, 201, 0.08), transparent 24rem),
+    radial-gradient(circle at 15% 15%, rgba(79, 70, 229, 0.1), transparent 24rem),
     var(--background);
 }
 
 body.dark {
-  --background: #17181d;
-  --surface: #23252d;
-  --text: #f2f3f7;
-  --muted: #abb0bc;
-  --line: #393b46;
-  --accent-soft: #343650;
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+  --background: #121318;
+  --surface: #1e2029;
+  --text: #f8fafc;
+  --muted: #a1a8b8;
+  --line: #323646;
+  --accent: #6366f1;
+  --accent-soft: #2b2e4a;
+  --danger: #f87171;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
 button,
